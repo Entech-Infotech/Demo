@@ -1,0 +1,1054 @@
+    public static final String BASE_URL = "http://test.score3s.com/api/v1/";
+    public static final String PERFORM_LOGIN = "PerformLogin";
+    public static final String LOGIN_AUTH = "LoginAuth";
+    public static final String OUTLET = "GetOutlet";
+    public static final String OUTLET_DETAILS = "GetOutletDetails";
+    public static final String MRP = "GetMRP";
+    public static final String MRP_DETAILS = "GetMRPDetails";
+    public static final String InVoice = "GetInvoice";
+    public static final String DIVISION = "GetDivision";
+    public static final String ROUTE = "GetRoute";
+    public static final String SALESMEN = "GetSalesman";
+    public static final String GODOWN = "GetGodown";
+    public static final String CLIENT = "GetClient";
+    public static final String ITEM = "GetItem";
+    public static final String GETUNIT = "GetUnits";
+    public static final String GETALTUNITS = "GetAlternetUnits";
+    public static final String DASHBOARD = "GetDashboard";
+    public static final String LOGOUT = "PerformLogout";
+    //public static final String POSTINVOICE = "PostInvoiceNew";
+    public static final String POSTINVOICE = "PostInvoice";
+    public static final String GETINVOICEBYID = "GetInvoicebyId";
+    public static final String POSTSETTING = "PostSetting";
+    public static final String POSTSMSSEND = "PostSMSSend";
+    public static final String GETINVOICEFORPRINT = "GetInvoicebyIdForPrint";
+	
+	---------------------------------------------
+	
+	  private void getDivision() {
+
+        try {
+            CustomProcessbar.showProcessBar(this, false, getString(R.string.please_wait));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+
+        AQuery aq;
+        aq = new AQuery(this);
+        String url = APIURL.BASE_URL + APIURL.DIVISION;
+        Map<String, String> params = new HashMap<String, String>();
+        params.put("AuthKey", AuthKey);
+
+        aq.ajax(url, params, JSONObject.class, new AjaxCallback<JSONObject>() {
+
+            @Override
+            public void callback(String url, JSONObject jRootObject, AjaxStatus status) {
+
+                if (jRootObject != null) {
+                    Log.d("DEBUG", "status " + status.getError() + status.getMessage() + jRootObject.toString());
+                    try {
+                        String ErrorMessage = "";
+                        ErrorMessage = jRootObject.getString("ErrorMessage");
+                        if (ErrorMessage.equalsIgnoreCase("")) {
+                            DIVISIONLIST.clear();
+                            jsonArrayDivision = jRootObject.getJSONArray("Divisions");
+                            Log.d("array", jsonArrayDivision.toString());
+
+                            for (int i = 0; i < jsonArrayDivision.length(); i++) {
+                                DIVISIONLIST.add(jsonArrayDivision.getJSONObject(i).getString("DivisionName"));
+
+                                try {
+                                    if (jsonArrayDivision.getJSONObject(i).getString("DivisionName").equals(SelectedItemDivision.getText().toString())) {
+                                        DivisionID = jsonArrayDivision.getJSONObject(i).getString("Id");
+                                    }
+                                } catch (JSONException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+
+
+                            Division = new SpinnerDialog(AddInvoiceActivity.this, DIVISIONLIST,
+                                    "Select or Search Division");
+
+                            Division.setCancellable(true);
+                            Division.setShowKeyboard(false);
+
+
+                            Division.bindOnSpinerListener(new OnSpinerItemClick() {
+                                @Override
+                                public void onClick(String item, int position) {
+                                    SelectedItemDivision.setText(item);
+                                    for (int i = 0; i < jsonArrayDivision.length(); i++) {
+                                        try {
+                                            if (jsonArrayDivision.getJSONObject(i).getString("DivisionName").equals(SelectedItemDivision.getText().toString())) {
+                                                DivisionID = jsonArrayDivision.getJSONObject(i).getString("Id");
+                                            }
+                                        } catch (JSONException e) {
+                                            e.printStackTrace();
+                                        }
+                                    }
+
+                                    getClient(DivisionID, RoutID);
+                                    SelectedItemClient.setText("Select Client");
+
+
+                                }
+                            });
+
+                            findViewById(R.id.layoutDivision).setOnClickListener(new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    Division.showSpinerDialog();
+                                }
+                            });
+                            getRoute();
+
+                        } else {
+                            CustomProcessbar.hideProcessBar();
+
+                            ToastUtils.showErrorToast(AddInvoiceActivity.this, "Error " + ErrorMessage);
+                        }
+                    } catch (JSONException e) {
+                        CustomProcessbar.hideProcessBar();
+
+                        Log.d("DEBUG", "Json Exception" + e.getMessage());
+                        e.printStackTrace();
+                        ToastUtils.showErrorToast(AddInvoiceActivity.this, "Error ");
+                    } catch (Exception e) {
+                        CustomProcessbar.hideProcessBar();
+                        Log.d("DEBUG", "Exception" + e.getMessage());
+                        e.printStackTrace();
+                        ToastUtils.showErrorToast(AddInvoiceActivity.this, "Error ");
+                    }
+                } else {
+                    CustomProcessbar.hideProcessBar();
+
+                    ToastUtils.showErrorToast(AddInvoiceActivity.this, "Error ");
+                }
+                super.callback(url, jRootObject, status);
+            }
+
+        });
+
+    }
+
+    private void getRoute() {
+
+
+        AQuery aq;
+        aq = new AQuery(this);
+        String url = APIURL.BASE_URL + APIURL.ROUTE;
+        Map<String, String> params = new HashMap<String, String>();
+        params.put("AuthKey", AuthKey);
+
+        aq.ajax(url, params, JSONObject.class, new AjaxCallback<JSONObject>() {
+
+            @Override
+            public void callback(String url, JSONObject jRootObject, AjaxStatus status) {
+
+                if (jRootObject != null) {
+                    Log.d("DEBUG", "status " + status.getError() + status.getMessage() + jRootObject.toString());
+                    try {
+                        String ErrorMessage = "";
+                        ErrorMessage = jRootObject.getString("ErrorMessage");
+                        if (ErrorMessage.equalsIgnoreCase("")) {
+                            ROUTELIST.clear();
+                            jsonArrayRoute = jRootObject.getJSONArray("Routes");
+                            for (int i = 0; i < jsonArrayRoute.length(); i++) {
+                                ROUTELIST.add(jsonArrayRoute.getJSONObject(i).getString("RouteName"));
+
+                                try {
+                                    if (jsonArrayRoute.getJSONObject(i).getString("RouteName").equals(SelectedItemRoute.getText().toString())) {
+                                        RoutID = jsonArrayRoute.getJSONObject(i).getString("Id");
+                                    }
+                                } catch (JSONException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                            Route = new SpinnerDialog(AddInvoiceActivity.this, ROUTELIST,
+                                    "Select or Search Route");
+
+                            Route.setCancellable(true);
+                            Route.setShowKeyboard(false);
+
+                            if (DivisionID == "0" || RoutID == "0") {
+                                ToastUtils.showErrorToast(AddInvoiceActivity.this, "Please Select Division First ");
+                            } else {
+                                getClient(DivisionID, RoutID);
+                            }
+
+                            SelectedItemClient.setText("Select Client");
+
+                            Route.bindOnSpinerListener(new OnSpinerItemClick() {
+                                @Override
+                                public void onClick(String item, int position) {
+                                    SelectedItemRoute.setText(item);
+                                    for (int i = 0; i < jsonArrayRoute.length(); i++) {
+                                        try {
+                                            if (jsonArrayRoute.getJSONObject(i).getString("RouteName").equals(SelectedItemRoute.getText().toString())) {
+                                                RoutID = jsonArrayRoute.getJSONObject(i).getString("Id");
+                                            }
+                                        } catch (JSONException e) {
+                                            e.printStackTrace();
+                                        }
+                                    }
+
+                                    if (DivisionID == "" || DivisionID == "0") {
+                                        ToastUtils.showErrorToast(AddInvoiceActivity.this, "Please Select Division First ");
+                                    } else {
+                                        getClient(DivisionID, RoutID);
+                                    }
+
+                                    SelectedItemClient.setText("Select Client");
+                                }
+                            });
+
+                            findViewById(R.id.layoutRoute).setOnClickListener(new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    Route.showSpinerDialog();
+                                }
+                            });
+                            getSalemen();
+
+
+                        } else {
+                            CustomProcessbar.hideProcessBar();
+
+                            ToastUtils.showErrorToast(AddInvoiceActivity.this, "Error " + ErrorMessage);
+                        }
+                    } catch (JSONException e) {
+                        CustomProcessbar.hideProcessBar();
+
+                        Log.d("DEBUG", "Json Exception" + e.getMessage());
+                        e.printStackTrace();
+                        ToastUtils.showErrorToast(AddInvoiceActivity.this, "Error ");
+                    } catch (Exception e) {
+                        CustomProcessbar.hideProcessBar();
+                        Log.d("DEBUG", "Exception" + e.getMessage());
+                        e.printStackTrace();
+                        ToastUtils.showErrorToast(AddInvoiceActivity.this, "Error ");
+                    }
+                } else {
+                    CustomProcessbar.hideProcessBar();
+
+                    ToastUtils.showErrorToast(AddInvoiceActivity.this, "Error ");
+                }
+                super.callback(url, jRootObject, status);
+            }
+
+        });
+
+    }
+
+    private void getSalemen() {
+
+
+        AQuery aq;
+        aq = new AQuery(this);
+        String url = APIURL.BASE_URL + APIURL.SALESMEN;
+        Map<String, String> params = new HashMap<String, String>();
+        params.put("AuthKey", AuthKey);
+
+        aq.ajax(url, params, JSONObject.class, new AjaxCallback<JSONObject>() {
+
+            @Override
+            public void callback(String url, JSONObject jRootObject, AjaxStatus status) {
+
+                if (jRootObject != null) {
+                    Log.d("DEBUG", "status " + status.getError() + status.getMessage() + jRootObject.toString());
+                    try {
+                        String ErrorMessage = "";
+                        ErrorMessage = jRootObject.getString("ErrorMessage");
+                        if (ErrorMessage.equalsIgnoreCase("")) {
+                            SALEMENLIST.clear();
+
+                            jsonArraySalesmen = jRootObject.getJSONArray("Salesmans");
+                            for (int i = 0; i < jsonArraySalesmen.length(); i++) {
+                                SALEMENLIST.add(jsonArraySalesmen.getJSONObject(i).getString("SalesmanName"));
+                            }
+                            Salemen = new SpinnerDialog(AddInvoiceActivity.this, SALEMENLIST,
+                                    "Select or Search Saleman");
+
+                            Salemen.setCancellable(true);
+                            Salemen.setShowKeyboard(false);
+
+
+                            Salemen.bindOnSpinerListener(new OnSpinerItemClick() {
+                                @Override
+                                public void onClick(String item, int position) {
+                                    SelectedItemSaleman.setText(item);
+                                }
+                            });
+
+                            findViewById(R.id.layoutSaleman).setOnClickListener(new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    Salemen.showSpinerDialog();
+                                }
+                            });
+
+
+                            getItem();
+
+
+                        } else {
+                            CustomProcessbar.hideProcessBar();
+
+                            ToastUtils.showErrorToast(AddInvoiceActivity.this, "Error " + ErrorMessage);
+                        }
+                    } catch (JSONException e) {
+                        CustomProcessbar.hideProcessBar();
+
+                        Log.d("DEBUG", "Json Exception" + e.getMessage());
+                        e.printStackTrace();
+                        ToastUtils.showErrorToast(AddInvoiceActivity.this, "Error ");
+                    } catch (Exception e) {
+                        CustomProcessbar.hideProcessBar();
+                        Log.d("DEBUG", "Exception" + e.getMessage());
+                        e.printStackTrace();
+                        ToastUtils.showErrorToast(AddInvoiceActivity.this, "Error ");
+                    }
+                } else {
+                    CustomProcessbar.hideProcessBar();
+
+                    ToastUtils.showErrorToast(AddInvoiceActivity.this, "Error ");
+                }
+                super.callback(url, jRootObject, status);
+            }
+
+        });
+
+    }
+
+    private void getClient(String divId, String routeId) {
+
+
+        AQuery aq;
+        aq = new AQuery(this);
+        String url = APIURL.BASE_URL + APIURL.CLIENT;
+        Map<String, String> params = new HashMap<String, String>();
+        params.put("AuthKey", AuthKey);
+        params.put("DivisionId", divId);
+        params.put("RouteId", routeId);
+        aq.ajax(url, params, JSONObject.class, new AjaxCallback<JSONObject>() {
+
+            @Override
+            public void callback(String url, JSONObject jRootObject, AjaxStatus status) {
+
+                if (jRootObject != null) {
+                    Log.d("DEBUG", "status " + status.getError() + status.getMessage() + jRootObject.toString());
+
+                    try {
+                        String ErrorMessage = "";
+                        ErrorMessage = jRootObject.getString("ErrorMessage");
+                        if (ErrorMessage.equalsIgnoreCase("")) {
+                            CLIENTCODELIST.clear();
+                            SelectedItemACGSTType = "";
+                            jsonArrayClient = jRootObject.getJSONArray("AccountMasters");
+                            for (int i = 0; i < jsonArrayClient.length(); i++) {
+                                CLIENTCODELIST.add(jsonArrayClient.getJSONObject(i).getString("AccountName"));
+                            }
+                            Client = new SpinnerDialog(AddInvoiceActivity.this, CLIENTCODELIST,
+                                    "Select or Search Client");
+
+                            Client.setCancellable(true);
+                            Client.setShowKeyboard(false);
+
+                            Client.bindOnSpinerListener(new OnSpinerItemClick() {
+                                @Override
+                                public void onClick(String item, int position) {
+                                    try {
+                                        SelectedItemClient.setText(item);
+                                        SelectedItemACGSTType = "";
+
+                                        for (int i = 0; i < jsonArrayClient.length(); i++) {
+                                            try {
+                                                if (jsonArrayClient.getJSONObject(i).getString("AccountName").equals(SelectedItemClient.getText().toString().trim())) {
+
+                                                    if (CheckValidate.checkemptystring(jsonArrayClient.getJSONObject(i).getString("AccountGSTType")) != "") {
+                                                        SelectedItemACGSTType = CheckValidate.checkemptystring(jsonArrayClient.getJSONObject(i).getString("AccountGSTType"));
+                                                    } else {
+                                                        SelectedItemACGSTType = "NA";
+                                                    }
+                                                    break;
+
+                                                }
+                                            } catch (JSONException e) {
+                                                e.printStackTrace();
+                                            }
+                                        }
+
+                                    } catch (NullPointerException e) {
+                                        //System.out.print();
+                                        ShowAlert.ShowAlert(AddInvoiceActivity.this, "Alert...", "Due to law internet client detail not found press OK and Re-Select Client Name from Client List.");
+                                        //SelectedItemClient.setText("Select Client");
+                                    }
+
+                                }
+                            });
+
+                            findViewById(R.id.layoutClient).setOnClickListener(new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    Client.showSpinerDialog();
+                                }
+                            });
+
+
+                        } else {
+                            CustomProcessbar.hideProcessBar();
+
+                            ToastUtils.showErrorToast(AddInvoiceActivity.this, "Error " + ErrorMessage);
+                        }
+                    } catch (JSONException e) {
+                        CustomProcessbar.hideProcessBar();
+
+                        Log.d("DEBUG", "Json Exception" + e.getMessage());
+                        e.printStackTrace();
+                        ToastUtils.showErrorToast(AddInvoiceActivity.this, "Error ");
+                    } catch (Exception e) {
+                        CustomProcessbar.hideProcessBar();
+                        Log.d("DEBUG", "Exception" + e.getMessage());
+                        e.printStackTrace();
+                        ToastUtils.showErrorToast(AddInvoiceActivity.this, "Error ");
+                    }
+
+                } else {
+                    CustomProcessbar.hideProcessBar();
+
+                    ToastUtils.showErrorToast(AddInvoiceActivity.this, "Error ");
+                }
+                super.callback(url, jRootObject, status);
+            }
+
+        });
+
+    }
+
+    private void GetItemUnits(String itemId) {
+
+        AQuery aq;
+        aq = new AQuery(this);
+        String url = APIURL.BASE_URL + APIURL.GETALTUNITS;
+        Map<String, String> params = new HashMap<String, String>();
+        params.put("AuthKey", AuthKey);
+        params.put("intItemID", itemId);
+
+        aq.ajax(url, params, JSONObject.class, new AjaxCallback<JSONObject>() {
+
+            @Override
+            public void callback(String url, JSONObject jRootObject, AjaxStatus status) {
+
+                if (jRootObject != null) {
+                    Log.d("DEBUG", "status " + status.getError() + status.getMessage() + jRootObject.toString());
+                    try {
+                        String ErrorMessage = "";
+                        ErrorMessage = jRootObject.getString("ErrorMessage");
+                        if (ErrorMessage.equalsIgnoreCase("")) {
+                            if (ErrorMessage.equalsIgnoreCase("")) {
+
+
+                                jsonArrayAlternetUnit = jRootObject.getJSONArray("alternetUnit");
+
+                            }
+
+                            CustomProcessbar.hideProcessBar();
+
+                        } else {
+                            CustomProcessbar.hideProcessBar();
+
+                            ToastUtils.showErrorToast(AddInvoiceActivity.this, "Deactivted Or Not alternet Unit " + ErrorMessage);
+                        }
+                        GetUnits();
+                    } catch (JSONException e) {
+                        CustomProcessbar.hideProcessBar();
+
+                        Log.d("DEBUG", "Json Exception" + e.getMessage());
+                        e.printStackTrace();
+                        ToastUtils.showErrorToast(AddInvoiceActivity.this, "Error ");
+                    } catch (Exception e) {
+                        CustomProcessbar.hideProcessBar();
+                        Log.d("DEBUG", "Exception" + e.getMessage());
+                        e.printStackTrace();
+                        ToastUtils.showErrorToast(AddInvoiceActivity.this, "Error ");
+                    }
+                } else {
+                    CustomProcessbar.hideProcessBar();
+
+                    ToastUtils.showErrorToast(AddInvoiceActivity.this, "Error ");
+                }
+                super.callback(url, jRootObject, status);
+            }
+
+        });
+
+    }
+
+    private void GetUnits() {
+
+        AQuery aq;
+        aq = new AQuery(this);
+        String url = APIURL.BASE_URL + APIURL.GETUNIT;
+        Map<String, String> params = new HashMap<String, String>();
+        params.put("AuthKey", AuthKey);
+
+
+        aq.ajax(url, params, JSONObject.class, new AjaxCallback<JSONObject>() {
+
+            @Override
+            public void callback(String url, JSONObject jRootObject, AjaxStatus status) {
+
+                if (jRootObject != null) {
+                    Log.d("DEBUG", "status " + status.getError() + status.getMessage() + jRootObject.toString());
+                    try {
+                        String ErrorMessage = "";
+                        ErrorMessage = jRootObject.getString("ErrorMessage");
+                        if (ErrorMessage.equalsIgnoreCase("")) {
+                            if (ErrorMessage.equalsIgnoreCase("")) {
+
+
+                                jsonArrayUnits = jRootObject.getJSONArray("Units");
+
+                            }
+
+                            CustomProcessbar.hideProcessBar();
+
+                        } else {
+                            CustomProcessbar.hideProcessBar();
+
+                            ToastUtils.showErrorToast(AddInvoiceActivity.this, "Deactivted Or Not alternet Unit " + ErrorMessage);
+                        }
+                    } catch (JSONException e) {
+                        CustomProcessbar.hideProcessBar();
+
+                        Log.d("DEBUG", "Json Exception" + e.getMessage());
+                        e.printStackTrace();
+                        ToastUtils.showErrorToast(AddInvoiceActivity.this, "Error ");
+                    } catch (Exception e) {
+                        CustomProcessbar.hideProcessBar();
+                        Log.d("DEBUG", "Exception" + e.getMessage());
+                        e.printStackTrace();
+                        ToastUtils.showErrorToast(AddInvoiceActivity.this, "Error ");
+                    }
+                } else {
+                    CustomProcessbar.hideProcessBar();
+
+                    ToastUtils.showErrorToast(AddInvoiceActivity.this, "Error ");
+                }
+                super.callback(url, jRootObject, status);
+            }
+
+        });
+
+    }
+
+
+    private void getItem() {
+
+        AQuery aq;
+        aq = new AQuery(this);
+        String url = APIURL.BASE_URL + APIURL.ITEM;
+        Map<String, String> params = new HashMap<String, String>();
+        params.put("AuthKey", AuthKey);
+
+        aq.ajax(url, params, JSONObject.class, new AjaxCallback<JSONObject>() {
+
+            @Override
+            public void callback(String url, JSONObject jRootObject, AjaxStatus status) {
+
+                if (jRootObject != null) {
+                    Log.d("DEBUG", "status " + status.getError() + status.getMessage() + jRootObject.toString());
+                    try {
+                        String ErrorMessage = "";
+                        ErrorMessage = jRootObject.getString("ErrorMessage");
+                        if (ErrorMessage.equalsIgnoreCase("")) {
+                            if (ErrorMessage.equalsIgnoreCase("")) {
+                                ITEMLIST.clear();
+                                ITEMIDLIST.clear();
+                                jsonArrayItem = jRootObject.getJSONArray("Items");
+                                for (int i = 0; i < jsonArrayItem.length(); i++) {
+                                    ITEMLIST.add(jsonArrayItem.getJSONObject(i).getString("ItemName") + " || " + "Stock = " + jsonArrayItem.getJSONObject(i).getString("ItemStock"));
+                                    ITEMIDLIST.add(jsonArrayItem.getJSONObject(i).getString("Id") + " || " + "Stock = " + jsonArrayItem.getJSONObject(i).getString("ItemStock"));
+
+                                }
+                            }
+                            getMRP();
+                            CustomProcessbar.hideProcessBar();
+
+                        } else {
+                            CustomProcessbar.hideProcessBar();
+
+                            ToastUtils.showErrorToast(AddInvoiceActivity.this, "Error " + ErrorMessage);
+                        }
+                    } catch (JSONException e) {
+                        CustomProcessbar.hideProcessBar();
+
+                        Log.d("DEBUG", "Json Exception" + e.getMessage());
+                        e.printStackTrace();
+                        ToastUtils.showErrorToast(AddInvoiceActivity.this, "Error ");
+                    } catch (Exception e) {
+                        CustomProcessbar.hideProcessBar();
+                        Log.d("DEBUG", "Exception" + e.getMessage());
+                        e.printStackTrace();
+                        ToastUtils.showErrorToast(AddInvoiceActivity.this, "Error ");
+                    }
+                } else {
+                    CustomProcessbar.hideProcessBar();
+
+                    ToastUtils.showErrorToast(AddInvoiceActivity.this, "Error ");
+                }
+                super.callback(url, jRootObject, status);
+            }
+
+        });
+
+    }
+
+
+    private void addInVoice() {
+
+        try {
+            CustomProcessbar.showProcessBar(this, false, getString(R.string.please_wait));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        editorDEFHEADDATA.clear();
+        editorDEFHEADDATA.apply();
+
+
+        AQuery aq;
+        aq = new AQuery(this);
+        String url = APIURL.BASE_URL + APIURL.POSTINVOICE;
+        Map<String, String> params = new HashMap<String, String>();
+        params.put("AuthKey", AuthKey);
+        params.put("InvoiceHeads", String.valueOf(jsonObjectAddValues));
+        params.put("InvoiceDetails", String.valueOf(jsonArray));
+
+        //Log.d("MYhEADER", "This is my HEADER"+jsonObjectAddValues.toString());
+
+        //Log.d("mYDETAIL", "This is my DETAIL"+jsonArray.toString());
+
+        aq.ajax(url, params, JSONObject.class, new AjaxCallback<JSONObject>() {
+
+            @Override
+            public void callback(String url, JSONObject jRootObject, AjaxStatus status) {
+
+                if (jRootObject != null) {
+                    Log.d("DEBUG", "status " + status.getError() + status.getMessage() + jRootObject.toString());
+                    try {
+                        String ErrorMessage = "";
+                        ErrorMessage = jRootObject.getString("ErrorMessage");
+
+                        if (ErrorMessage.equalsIgnoreCase("")) {
+
+                            if (jRootObject.getString("Status").equalsIgnoreCase("Record saved success")) {
+                                editorUserAuthKey.putString("SELECTVALUE", "0");
+                                editorUserAuthKey.putString("TabNo", "1");
+                                editorUserAuthKey.apply();
+
+                                editorDEFHEADDATA.putString("divison", SelectedItemDivision.getText().toString());
+                                editorDEFHEADDATA.putString("sroute", SelectedItemRoute.getText().toString());
+                                editorDEFHEADDATA.putString("ssalesman", SelectedItemSaleman.getText().toString());
+                                editorDEFHEADDATA.apply();
+
+                                finish();
+
+                                Intent intent = new Intent(getApplicationContext(), NavigationDrawerActivity.class);
+                                startActivity(intent);
+                                CustomProcessbar.hideProcessBar();
+                                ToastUtils.showErrorToast(AddInvoiceActivity.this, jRootObject.getString("Status"));
+                            } else if (jRootObject.getString("Status").contains("UNIQUE KEY")) {
+                                CustomProcessbar.hideProcessBar();
+                                ShowAlert.ShowAlert(AddInvoiceActivity.this, "Alert...", jRootObject.getString("Duplicate Invoice Number found, please press OK and Re Save it..."));
+                                return;
+                            } else if (jRootObject.getString("Status").contains("failed on Rollback")) {
+                                CustomProcessbar.hideProcessBar();
+                                ShowAlert.ShowAlert(AddInvoiceActivity.this, "Alert...", jRootObject.getString("Something wrong inside in network, please press okay and Re Save it..."));
+                                return;
+                            } else {
+                                CustomProcessbar.hideProcessBar();
+                                ShowAlert.ShowAlert(AddInvoiceActivity.this, "Alert...", jRootObject.getString("Status"));
+                                ToastUtils.showErrorToast(AddInvoiceActivity.this, jRootObject.getString("Status"));
+                                return;
+                            }
+
+                        } else {
+                            CustomProcessbar.hideProcessBar();
+                            ShowAlert.ShowAlert(AddInvoiceActivity.this, "Alert...", ErrorMessage);
+                            //ToastUtils.showErrorToast(AddInvoiceActivity.this, "Error " + ErrorMessage);
+                            return;
+                        }
+                    } catch (JSONException e) {
+                        CustomProcessbar.hideProcessBar();
+                        Log.d("DEBUG", "Json Exception" + e.getMessage());
+                        e.printStackTrace();
+                        ShowAlert.ShowAlert(AddInvoiceActivity.this, "Alert...", "You are in queue..., Press OK and Re-Save it...");
+                        //ToastUtils.showErrorToast(AddInvoiceActivity.this, "Error 1");
+                        return;
+                    } catch (Exception e) {
+                        CustomProcessbar.hideProcessBar();
+                        Log.d("DEBUG", "Exception" + e.getMessage());
+                        e.printStackTrace();
+                        ShowAlert.ShowAlert(AddInvoiceActivity.this, "Alert...", "Something going wrong..., Press OK and Re-Save it...");
+                        //ToastUtils.showErrorToast(AddInvoiceActivity.this, "Error 2");
+                        return;
+                    }
+                } else {
+                    CustomProcessbar.hideProcessBar();
+                    //ToastUtils.showErrorToast(AddInvoiceActivity.this, "Due to law network or more items in invoice its take more time.");
+
+                    counter = 2;
+                    /*TempDialog = new ProgressDialog(AddInvoiceActivity.this);
+                    TempDialog.setMessage("Please wait...");
+                    TempDialog.setCancelable(false);
+                    TempDialog.setProgress(counter);
+                    TempDialog.show();*/
+
+                    try {
+                        CustomProcessbar.showProcessBar(AddInvoiceActivity.this, false, getString(R.string.please_wait));
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+
+                    countdowntimer = new CountDownTimer(2000, 1000) {
+                        public void onTick(long millisUntilFinished) {
+                            //TempDialog.setMessage("Please wait.." + counter + " sec");
+                            //counter--;
+                        }
+
+                        public void onFinish() {
+                            androidx.appcompat.app.AlertDialog.Builder builder = new androidx.appcompat.app.AlertDialog.Builder(AddInvoiceActivity.this);
+                            builder.setCancelable(false);
+                            builder.setTitle("Warning...!");
+                            builder.setMessage("Save done, But please ones veryfy after 1 minute.");
+                            builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    //if user pressed "yes", then he is allowed to exit from application
+
+                                    editorUserAuthKey.putString("SELECTVALUE", "0");
+                                    editorUserAuthKey.putString("TabNo", "0");
+                                    editorUserAuthKey.apply();
+
+                                    editorDEFHEADDATA.putString("divison", SelectedItemDivision.getText().toString());
+                                    editorDEFHEADDATA.putString("sroute", SelectedItemRoute.getText().toString());
+                                    editorDEFHEADDATA.putString("ssalesman", SelectedItemSaleman.getText().toString());
+                                    editorDEFHEADDATA.apply();
+
+                                    finish();
+                                    Intent intent = new Intent(getApplicationContext(), NavigationDrawerActivity.class);
+                                    startActivity(intent);
+                                    //TempDialog.dismiss();
+                                    CustomProcessbar.hideProcessBar();
+                                }
+                            });
+                            androidx.appcompat.app.AlertDialog alert = builder.create();
+                            alert.show();
+
+                        }
+                    }.start();
+                }
+                super.callback(url, jRootObject, status);
+            }
+
+        });
+
+    }
+
+    private void getMRP() {
+
+        try {
+            CustomProcessbar.showProcessBar(this, false, getString(R.string.please_wait));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+
+        AQuery aq;
+        aq = new AQuery(this);
+        String url = APIURL.BASE_URL + APIURL.MRP;
+        Map<String, String> params = new HashMap<String, String>();
+        params.put("AuthKey", AuthKey);
+
+        aq.ajax(url, params, JSONObject.class, new AjaxCallback<JSONObject>() {
+
+            @Override
+            public void callback(String url, JSONObject jRootObject, AjaxStatus status) {
+
+                if (jRootObject != null) {
+                    Log.d("DEBUG", "status " + status.getError() + status.getMessage() + jRootObject.toString());
+                    try {
+                        String ErrorMessage = "";
+                        ErrorMessage = jRootObject.getString("ErrorMessage");
+                        if (ErrorMessage.equalsIgnoreCase("")) {
+
+                            jsonArrayMRP = jRootObject.getJSONArray("MRPs");
+
+
+                            GetItemUnits("0");
+
+                            CustomProcessbar.hideProcessBar();
+
+                        } else {
+                            CustomProcessbar.hideProcessBar();
+                            ToastUtils.showErrorToast(AddInvoiceActivity.this, "Error " + ErrorMessage);
+                        }
+                    } catch (JSONException e) {
+                        CustomProcessbar.hideProcessBar();
+                        Log.d("DEBUG", "Json Exception" + e.getMessage());
+                        e.printStackTrace();
+                        ToastUtils.showErrorToast(AddInvoiceActivity.this, "Error ");
+                    } catch (Exception e) {
+                        CustomProcessbar.hideProcessBar();
+                        Log.d("DEBUG", "Exception" + e.getMessage());
+                        e.printStackTrace();
+                        ToastUtils.showErrorToast(AddInvoiceActivity.this, "Error ");
+                    }
+                } else {
+                    CustomProcessbar.hideProcessBar();
+                    ToastUtils.showErrorToast(AddInvoiceActivity.this, "Error ");
+                }
+                super.callback(url, jRootObject, status);
+            }
+
+        });
+
+    }
+
+    private void getMRPDetails(String itemId, String mrpId) {
+
+        try {
+            CustomProcessbar.showProcessBar(this, false, getString(R.string.please_wait));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        // for stock check
+        double tmptqty = 0;
+        double tmpfreeqty = 0;
+        tmpChkQty = 0;
+
+        if (jsonArray.length() > 0) {
+
+            for (int i = 0; i < jsonArray.length(); i++) {
+                try {
+                    if (jsonArray.getJSONObject(i).getString("ItemId").equals(itemId) && jsonArray.getJSONObject(i).getString("MRPId").equals(mrpId)) {
+
+                        tmptqty += CheckValidate.checkemptyDouble(jsonArray.getJSONObject(i).getString("TotalQty"));
+                        tmpfreeqty += CheckValidate.checkemptyDouble(jsonArray.getJSONObject(i).getString("FreeQty"));
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            tmpChkQty = tmptqty + tmpfreeqty;
+        }
+
+        // End stock check
+        dblTinKg = 0;
+        AQuery aq;
+        aq = new AQuery(this);
+        String url = APIURL.BASE_URL + APIURL.MRP_DETAILS;
+        Map<String, String> params = new HashMap<String, String>();
+        params.put("AuthKey", AuthKey);
+        params.put("ItemId", itemId);
+        params.put("MRPId", mrpId);
+        aq.ajax(url, params, JSONObject.class, new AjaxCallback<JSONObject>() {
+
+            @Override
+            public void callback(String url, JSONObject jRootObject, AjaxStatus status) {
+
+                if (jRootObject != null) {
+                    Log.d("DEBUG", "status " + status.getError() + status.getMessage() + jRootObject.toString());
+                    try {
+                        String ErrorMessage = "";
+                        ErrorMessage = jRootObject.getString("ErrorMessage");
+                        if (ErrorMessage.equalsIgnoreCase("")) {
+
+                            jsonObjMRPDetails = jRootObject.getJSONObject("MRPDetail");
+                            if (edtRate.getText().toString().trim().equals("")) {
+                                edtRate.setText(jsonObjMRPDetails.getString("SalesRate"));
+                            }
+
+
+                            double tmpStock = (CheckValidate.checkemptyDouble(jsonObjMRPDetails.getString("Stock")) + tmpEditChkQty) - tmpChkQty;
+
+                            edtStock.setText(String.format("%.2f", tmpStock));
+                          /*  if(CheckValidate.checkemptyDouble(jsonObjMRPDetails.getString("Stock")) <= 0)
+                            {
+                                edtStock.setError("current stock is::" + jsonObjMRPDetails.getString("Stock"));
+                            }*/
+
+
+                            if (SelectedItemACGSTType.trim().equals("B2BWS") || SelectedItemACGSTType.trim().equals("B2CWS") || SelectedItemACGSTType.trim().equals("NA") || SelectedItemACGSTType.trim().isEmpty()) {
+
+                                edtCGSTACID.setText(CheckValidate.checkemptyTV(jsonObjMRPDetails.getString("CGSTAccountID")));
+                                edtCGSTP.setText(CheckValidate.checkemptyTV(jsonObjMRPDetails.getString("CGSTPerc")));
+                                edtSGSTACID.setText(CheckValidate.checkemptyTV(jsonObjMRPDetails.getString("SGSTAccountID")));
+                                edtSGSTP.setText(CheckValidate.checkemptyTV(jsonObjMRPDetails.getString("SGSTPerc")));
+                                edtIGSTACID.setText("");
+                                edtIGSTP.setText("");
+
+
+                            } else {
+                                edtCGSTACID.setText("");
+                                edtCGSTP.setText("");
+                                edtSGSTACID.setText("");
+                                edtSGSTP.setText("");
+                                edtIGSTACID.setText(CheckValidate.checkemptyTV(jsonObjMRPDetails.getString("IGSTAccountID")));
+                                edtIGSTP.setText(CheckValidate.checkemptyTV(jsonObjMRPDetails.getString("IGSTPerc")));
+                            }
+
+                            if (CheckValidate.checkemptyDouble(jsonObjMRPDetails.getString("CESSAccountID")) > 0 && CheckValidate.checkemptyDouble(jsonObjMRPDetails.getString("CESSID")) > 0) {
+                                edtCESSACID.setText(CheckValidate.checkemptyTV(jsonObjMRPDetails.getString("CESSAccountID")));
+                                edtCESSID.setText(CheckValidate.checkemptyTV(jsonObjMRPDetails.getString("CESSID")));
+                                edtCESSP.setText(CheckValidate.checkemptyTV(jsonObjMRPDetails.getString("CESSPerc")));
+                            } else {
+                                edtCESSACID.setText("");
+                                edtCESSID.setText("");
+                                edtCESSP.setText("");
+                            }
+
+                            Rate = CheckValidate.checkemptyDouble(edtRate.getText().toString());
+                            //edtPrimaryUnitQty.setText(String.format("%."+UDP+"f",PrimaryUnitQty));
+                            if (PrimaryUnitQty > 0) {
+                                edtPrimaryUnitQty.setText(String.format("%." + UDP + "f", PrimaryUnitQty));
+                            } else {
+                                edtPrimaryUnitQty.setText("");
+                            }
+
+                            double tmpTotalQty;
+                            if (CheckValidate.checkemptyDouble(String.valueOf(AltUnitQty)) <= 0) {
+                                edtAltUnitQty.setText("");
+                                tmpTotalQty = CheckValidate.checkemptyDouble(edtPrimaryUnitQty.getText().toString().trim());
+                            } else {
+                                edtAltUnitQty.setText(String.format("%." + UDA + "f", AltUnitQty));
+                                tmpTotalQty = (AltUnitQty * AltUnitConversion) + PrimaryUnitQty;
+                            }
+
+                            edtTotalQty.setText(String.format("%." + UDP + "f", tmpTotalQty));
+                            TotalQty = CheckValidate.checkemptyDouble(edtTotalQty.getText().toString().trim());
+
+
+                            dblTinKg = CheckValidate.checkemptyDouble(jsonObjMRPDetails.getString("ItemWeightPerUnit"));
+
+                            if (TotalQty > 0 && dblTinKg > 0) {
+                                double tmpTinKG = TotalQty * dblTinKg;
+                                String tmptxtTinKG = String.format("%.3f", tmpTinKG);
+                                edtTinKG.setText(tmptxtTinKG);
+                            } else {
+                                edtTinKG.setText("");
+                            }
+
+                            double tmpGross = TotalQty * Rate;
+                            String gross = String.format("%.2f", tmpGross);
+                            edtGross.setText(gross);
+
+                            Gross = CheckValidate.checkemptyDouble(edtGross.getText().toString().trim());
+                            cgstP = CheckValidate.checkemptyDouble(edtCGSTP.getText().toString().trim());
+                            sgstP = CheckValidate.checkemptyDouble(edtSGSTP.getText().toString().trim());
+                            igstP = CheckValidate.checkemptyDouble(edtIGSTP.getText().toString().trim());
+                            cessP = CheckValidate.checkemptyDouble(edtCESSP.getText().toString().trim());
+
+                            DiscPer = CheckValidate.checkemptyDouble(edtDiscPer.getText().toString().trim());
+                            Disc = CheckValidate.checkemptyDouble(edtDisc.getText().toString().trim());
+
+                            DiscIIPer = CheckValidate.checkemptyDouble(edtDiscIIPer.getText().toString().trim());
+                            DiscII = CheckValidate.checkemptyDouble(edtDiscII.getText().toString().trim());
+
+                            DiscIIIPer = CheckValidate.checkemptyDouble(edtDiscIIIPer.getText().toString().trim());
+                            DiscIII = CheckValidate.checkemptyDouble(edtDiscIII.getText().toString().trim());
+
+                            TotalDisc = Disc + DiscII + DiscIII;
+                            if (CheckValidate.checkemptyDouble(String.valueOf(TotalDisc)) > 0) {
+                                edtTotalDisc.setText(String.format("%.2f", TotalDisc));
+                            } else {
+                                edtTotalDisc.setText("");
+                            }
+
+                            OtherPer = CheckValidate.checkemptyDouble(edtOtherPer.getText().toString().trim());
+                            Other = CheckValidate.checkemptyDouble(edtOther.getText().toString().trim());
+
+                            OtherIIPer = CheckValidate.checkemptyDouble(edtOtherIIPer.getText().toString().trim());
+                            OtherII = CheckValidate.checkemptyDouble(edtOtherII.getText().toString().trim());
+
+                            double cgst = 0;
+                            if (cgstP > 0) {
+                                double tmpCgst = (((Gross - Disc - DiscII - DiscIII + Other + OtherII) * cgstP) / 100);
+                                String txtcgst = String.format("%.2f", tmpCgst);
+                                edtCGST.setText(txtcgst);
+                                cgst = CheckValidate.checkemptyDouble(edtCGST.getText().toString().trim());
+                            } else {
+
+                                edtCGST.setText("");
+                            }
+
+                            double sgst = 0;
+                            if (sgstP > 0) {
+                                double tmpSgst = (((Gross - Disc - DiscII - DiscIII + Other + OtherII) * sgstP) / 100);
+                                String txtsgst = String.format("%.2f", tmpSgst);
+                                edtSGST.setText(txtsgst);
+                                sgst = CheckValidate.checkemptyDouble(edtSGST.getText().toString().trim());
+                            } else {
+
+                                edtSGST.setText("");
+                            }
+
+                            double igst = 0;
+                            if (igstP > 0) {
+                                double tmpIgst = (((Gross - Disc - DiscII - DiscIII + Other + OtherII) * igstP) / 100);
+                                String txtigst = String.format("%.2f", tmpIgst);
+                                edtIGST.setText(txtigst);
+                                igst = CheckValidate.checkemptyDouble(edtIGST.getText().toString().trim());
+                            } else {
+
+                                edtIGST.setText("");
+                            }
+
+                            double cess = 0;
+                            if (cessP > 0) {
+                                double tmpCess = (((Gross - Disc - DiscII - DiscIII + Other + OtherII) * cessP) / 100);
+                                String txtcess = String.format("%.2f", tmpCess);
+                                edtCESS.setText(txtcess);
+                                cess = CheckValidate.checkemptyDouble(edtCESS.getText().toString().trim());
+                            } else {
+                                edtCESS.setText("");
+                            }
+
+                            double totalAmount = (Gross - Disc - DiscII - DiscIII + Other + OtherII + cgst + sgst + igst + cess);
+                            String totalAmt = String.format("%.2f", totalAmount);
+                            edtAmount.setText(totalAmt);
+                            CustomProcessbar.hideProcessBar();
+
+                        } else {
+                            CustomProcessbar.hideProcessBar();
+
+                            ToastUtils.showErrorToast(AddInvoiceActivity.this, "Error " + ErrorMessage);
+                        }
+                    } catch (JSONException e) {
+                        CustomProcessbar.hideProcessBar();
+
+                        Log.d("DEBUG", "Json Exception" + e.getMessage());
+                        e.printStackTrace();
+                        ToastUtils.showErrorToast(AddInvoiceActivity.this, "Error ");
+                    } catch (Exception e) {
+                        CustomProcessbar.hideProcessBar();
+                        Log.d("DEBUG", "Exception" + e.getMessage());
+                        e.printStackTrace();
+                        ToastUtils.showErrorToast(AddInvoiceActivity.this, "Error ");
+                    }
+                } else {
+                    CustomProcessbar.hideProcessBar();
+
+                    ToastUtils.showErrorToast(AddInvoiceActivity.this, "Error ");
+                }
+                super.callback(url, jRootObject, status);
+            }
+
+        });
+
+
+    }
