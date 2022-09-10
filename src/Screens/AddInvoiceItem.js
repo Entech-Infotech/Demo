@@ -14,6 +14,7 @@ import { FontAwesome, Fontisto, Ionicons, MaterialCommunityIcons } from '@expo/v
 import BackHeader from "../Components/BackHeader";
 import SearchComponent from "../Components/SearchComponent";
 import * as constData from '../../Constants/APIContants';
+import Loader from "../Components/Loader";
 
 const AddInvoiceItemScreen = (props) => {
 
@@ -22,12 +23,14 @@ const AddInvoiceItemScreen = (props) => {
     const [currentSelected, setCurrentSelected] = useState(null);
     const [item, setItem] = useState('Item Id')
     const [itemId, setItemId] = useState(0)
+    const [loading, setLoading] = useState(false);
 
     useEffect(() => {
         fetchItems();
-    },[])
+    }, [])
 
     const fetchItems = async () => {
+        setLoading(true)
         var url = "http://test.score3s.com/api/v1/GetItem"
         const result = await fetch(url, {
             method: 'POST',
@@ -36,6 +39,7 @@ const AddInvoiceItemScreen = (props) => {
             },
             body: JSON.stringify(constData.postData)
         });
+        setLoading(false)
         const data = await result.json();
         if (data.ErrorMessage == "" && data.Items.length > 0) {
             setItems(data.Items);
@@ -47,20 +51,21 @@ const AddInvoiceItemScreen = (props) => {
             <BackHeader navigation={props.navigation} />
             <SearchComponent show={show} setShow={setShow} customData={currentSelected} />
             <ScrollView style={{ paddingHorizontal: 10 }}>
-            <View style={[styles.ListContainer]}>
-                <TouchableOpacity style={[styles.SelectItemTextInput, { width: '50%'  }]} onPress={() => {
-                    setCurrentSelected({
-                        'setCustomStateLabel': setItem,
-                        'setCustomStateValue': setItemId,
-                        'data': items,
-                        'label': 'ItemName',
-                        'value': 'Id'
-                    });
-                    setShow(!show);
-                }}>
-                    <Text>{item}</Text>
-                </TouchableOpacity>
-              
+            <Loader visibility={loading} />
+                <View style={[styles.ListContainer]}>
+                    <TouchableOpacity style={[styles.SelectItemTextInput, { width: '50%' }]} onPress={() => {
+                        setCurrentSelected({
+                            'setCustomStateLabel': setItem,
+                            'setCustomStateValue': setItemId,
+                            'data': items,
+                            'label': 'ItemName',
+                            'value': 'Id'
+                        });
+                        setShow(!show);
+                    }}>
+                        <Text>{item}</Text>
+                    </TouchableOpacity>
+
                     <View style={{ width: '48%', flexDirection: 'row', alignItems: 'center' }}>
                         <Text style={{ flex: 0.4 }}>Select Item</Text>
                         <TextInput style={[styles.TextInput, { flex: 0.6 }]}></TextInput>

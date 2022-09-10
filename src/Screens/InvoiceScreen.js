@@ -14,6 +14,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import CreateInvoiceScreen from './CreateInvoice';
 import AddInvoiceItemScreen from "./AddInvoiceItem";
 import * as constData from '../../Constants/APIContants';
+import Loader from "../Components/Loader";
 
 const InvoiceStackNavigator = createNativeStackNavigator();
 
@@ -45,6 +46,7 @@ const InvoiceScreen = (props) => {
     const [search, setSearch] = useState('');
     const [invoices, setInvoices] = useState(null);
     const [total, setTotal] = useState(0);
+    const [loading, setLoading] = useState(false);
 
     const color = [
         { borderColor: '#C3D8EF', backgroundColor: '#E2ECF8' },
@@ -54,12 +56,13 @@ const InvoiceScreen = (props) => {
         { borderColor: '#DFD4F2', backgroundColor: '#F3E5FF' },
 
     ]
-    
+
     useEffect(() => {
         fetchInvoice();
     }, [])
 
     const fetchInvoice = async () => {
+        setLoading(true)
         var url = "http://test.score3s.com/api/v1/GetInvoice"
         const result = await fetch(url, {
             method: 'POST',
@@ -68,6 +71,7 @@ const InvoiceScreen = (props) => {
             },
             body: JSON.stringify(constData.postData)
         });
+        setLoading(false)
         const data = await result.json();
         if (data.ErrorMessage == "" && data.Invoices.length > 0) {
             var invoiceData = data.Invoices;
@@ -81,6 +85,7 @@ const InvoiceScreen = (props) => {
     return (
         <View style={[styles.container]}>
             <View floatingLabel style={[styles.SearchInput, { paddingVertical: 3, paddingHorizontal: 10, flex: 0.05 }]}>
+            <Loader visibility={loading} />
                 <Ionicons name="search-outline" size={20} color="#4c164d" />
                 <TextInput
                     style={{ paddingVertical: 5, width: '90%', marginLeft: 5 }}
@@ -115,7 +120,7 @@ const InvoiceScreen = (props) => {
                     />
                 </View>
                 :
-                <View style={{flex:0.9}}>
+                <View style={{ flex: 0.9 }}>
                     <Image
                         source={require('../../assets/Alone-pana.png')}
                         style={{ height: '80%', width: '100%', resizeMode: 'contain' }}
